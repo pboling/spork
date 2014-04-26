@@ -3,10 +3,12 @@ class Spork::RunStrategy::Forking < Spork::RunStrategy
     Kernel.respond_to?(:fork)
   end
 
-  def run(argv, stderr, stdout)
-    abort if running?
+  def is_parallel?
+    @is_parallel
+  end
 
-    @child = ::Spork::Forker.new do
+  def child_forker(argv, stderr, stdout)
+    ::Spork::Forker.new do
       $stdout, $stderr = stdout, stderr
       load test_framework.helper_file
       Spork.exec_each_run
@@ -14,11 +16,38 @@ class Spork::RunStrategy::Forking < Spork::RunStrategy
       Spork.exec_after_each_run
       result
     end
-    @child.result
+  end
+
+  def run(argv, stderr, stdout)
+    @is_parallel = argv.include?('--test_env_number')
+    if is_parallel?
+
+      # We are running *with* parallel_tests
+      # Not aborting if running because we expect more than one to be running.
+      #abort if running?
+
+      @children ||= []
+      @children << (child = child_forker(argv, stderr, stdout))
+      @children = @children.reject {|c| c == child}
+      child.result
+
+    else
+
+      # We are running without parallel_tests
+      abort if child_running?
+
+      @child = child_forker(argv, stderr, stdout)
+      @child.result
+
+    end
   end
 
   def abort
-    @child && @child.abort
+    if is_parallel?
+      @children && @children.each {|child| child.abort}
+    else
+      @child && @child.abort
+    end
   end
 
   def preload
@@ -26,6 +55,14 @@ class Spork::RunStrategy::Forking < Spork::RunStrategy
   end
 
   def running?
+    if is_parallel?
+      @children && @children.detect {|child| child.running?}
+    else
+      child_running?
+    end
+  end
+
+  def child_running?
     @child && @child.running?
   end
 

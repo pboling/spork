@@ -13,12 +13,23 @@ describe Spork::RunStrategy::Forking do
     @run_strategy.run("test", STDOUT, STDIN).should == "tests were ran"
   end
 
-  it "aborts the current running thread when another run is started" do
+  it "aborts the current running thread when another run is started when not running in parallel" do
     create_helper_file
     @fake_framework.wait_time = 0.25
     first_run = Thread.new { @run_strategy.run("test", STDOUT, STDIN).should == nil }
     sleep(0.05)
     @run_strategy.run("test", STDOUT, STDIN).should == true
+
+    # wait for the first to finish
+    first_run.join
+  end
+
+  it "does not abort the current running thread when another run is started in parallel" do
+    create_helper_file
+    @fake_framework.wait_time = 0.25
+    first_run = Thread.new { @run_strategy.run(["test","--test_env_number","1"], STDOUT, STDIN).should == true }
+    sleep(0.05)
+    @run_strategy.run(["test","--test_env_number","2"], STDOUT, STDIN).should == true
 
     # wait for the first to finish
     first_run.join
