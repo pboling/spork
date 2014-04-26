@@ -1,4 +1,4 @@
-= Spork
+= Spork {<img src="https://travis-ci.org/sporkrb/spork.png" alt="Build Status" />}[https://travis-ci.org/sporkrb/spork]
 
 * Repository: http://github.com/sporkrb/spork
 * Issues: http://github.com/sporkrb/spork/issues
@@ -20,40 +20,44 @@ Spork runs on POSIX systems using fork. It also runs on windows by pre-populatin
 
 == Supported Application Frameworks
 
-Actually, Spork ~can~ work with any application framework.  But, it ships with hooks and helpers to make an "out of the box" experience.
+Spork can work with any application framework, but needs work to prevent application files from being eager loaded.
 
-* Rails 3.0 (for Rails 2.{1,2,3}.x, please try spork 0.8.x)
-* Padrino
+See https://github.com/sporkrb/spork/wiki/Supported-Application-Frameworks for a list of supported frameworks and their gems.
 
 == INSTALL:
 
-=== rubygems:
+NOTICE:
 
-  [sudo] gem install spork --version 0.9.0
+* Rails support (and other app frameworks) have been extracted. If using spork with rails, you'll want to use spork-rails gem, https://github.com/sporkrb/spork-rails.
 
-(Rails 2.x)
+* If you wish to use the stable verson of spork 0.9, refer to https://github.com/sporkrb/spork/tree/v0.9.x
 
-  [sudo] gem install spork --version 0.8.4
-
-=== bundler:
+=== Bundler:
 
 Add to your Gemfile:
 
-  gem 'spork', '~> 0.9.0'
-
-(Rails 2.x, use this)
-
-  gem 'spork', '~> 0.8'
+  gem 'spork', '~> 1.0rc'
 
 == Usage
 
 From a terminal, change to your project directory.
 
-Then, bootstrap your spec/spec_helper.rb file.
+Then, bootstrap your test helper file. If running rspec,
 
-  spork --bootstrap
+  spork rspec --bootstrap
 
-Next, edit spec/spec_helper.rb and follow the instructions that were put at the top.
+Cucumber:
+
+  spork cucumber --bootstrap
+
+TestUnit:
+
+  (Install the spork-testunit gem)
+  spork test_unit --bootstrap
+
+(If you don't specifiy a test framework, spork will find one and pick it.)
+
+Follow the instructions.
 
 Finally, run spork.  A spec DRb server will be running!
 
@@ -127,8 +131,8 @@ See http://wiki.github.com/sporkrb/spork/troubleshooting
 * Ben Mabey - help with documentation, testing, suggestions, patches, and bringing Cucumber support.
 * David Chelimsky - for the fine RSpec testing framework, and the original rspec-rails spec_server implementation, which Spork has built upon.
 * LeadTune - just for being an awesome place to work.
-* Alan Aslak - for the fine Cucumber testing framework, and for much collaboration getting cucumber working with spork.
+* Aslak Hellesøy - for the fine Cucumber testing framework, and for much collaboration getting cucumber working with spork.
 * Roger Pack - JRuby support / Windows
 * Donald Parish - Windows support (Magazine strategy)
 
-Spork (c) 2011 Tim Harper, released under the MIT license
+Spork (c) 2012 Tim Harper, released under the MIT license

@@ -16,7 +16,7 @@ end
 
 task :default => :spec
 
-require 'rake/rdoctask'
+require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
   if File.exist?('VERSION.yml')
     require 'yaml'
@@ -46,6 +46,7 @@ namespace :gem do
   desc "Build gems"
   task :build do
     sh "rm -f spork-*.gem"
+    ENV['RUBYOPT']="" # Bundler sets some options that causes gem build to fail.
     sh "gem build spork.gemspec"
     sh "env PLATFORM=x86-mingw32 gem build spork.gemspec"
     sh "env PLATFORM=x86-mswin32 gem build spork.gemspec"

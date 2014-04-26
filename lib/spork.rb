@@ -23,7 +23,7 @@ module Spork
       return if prevent_double_run && already_ran?(caller.first)
       yield
     end
-    
+
     # Run a block AFTER the fork occurs.  By default, if prefork is called twice in the same file and line number, the supplied block will only be ran once.
     #
     # == Parameters
@@ -37,7 +37,7 @@ module Spork
         yield
       end
     end
-    
+
     # Run a block after specs are run.
     #
     # == Parameters
@@ -55,14 +55,14 @@ module Spork
     def state
       @state ||= :not_using_spork
     end
-    
+
     # Used by the server.  Called when loading the prefork blocks of the code.
     def exec_prefork(&block)
       @state = :prefork
       yield
     end
-    
-    # Used by the server.  Called to run all of the prefork blocks.
+
+    # Used by the server.  Called to run all of the each_run blocks.
     def exec_each_run(&block)
       @state = :run
       activate_after_each_run_at_exit_hook
@@ -70,7 +70,7 @@ module Spork
       each_run_procs.clear
       yield if block_given?
     end
-    
+
     # Used by the server.  Called to run all of the after_each_run blocks.
     def exec_after_each_run
       # processes in reverse order similar to at_exit
@@ -81,9 +81,9 @@ module Spork
     # Traps an instance method of a class (or module) so any calls to it don't actually run until Spork.exec_each_run
     def trap_method(klass, method_name)
       method_name_without_spork, method_name_with_spork = alias_method_names(method_name, :spork)
-      
+
       klass.class_eval <<-EOF, __FILE__, __LINE__ + 1
-        alias :#{method_name_without_spork} :#{method_name} unless method_defined?(:#{method_name_without_spork}) 
+        alias :#{method_name_without_spork} :#{method_name} unless method_defined?(:#{method_name_without_spork})
         def #{method_name}(*args, &block)
           Spork.each_run(false) do
             #{method_name_without_spork}(*args, &block)
@@ -91,22 +91,16 @@ module Spork
         end
       EOF
     end
-    
+
     # Same as trap_method, but for class methods instead
     def trap_class_method(klass, method_name)
       trap_method((class << klass; self; end), method_name)
     end
-    
-    def detect_and_require(subfolder)
-      ([LIBDIR.to_s] + other_spork_gem_load_paths).uniq.each do |gem_path|
-        Dir.glob(File.join(gem_path, subfolder)).each { |file| require file }
-      end
-    end
 
-    # This method is used to auto-discover peer plugins such as spork-testunit.
-    def other_spork_gem_load_paths
-      @other_spork_gem_load_paths ||= Spork::GemHelpers.latest_load_paths.grep(/spork/).select do |g|
-        not g.match(%r{/spork-[0-9\-.]+/lib}) # don't include other versions of spork
+    def detect_and_require(pattern)
+      GemHelpers.find_files_using_latest_spec(pattern).uniq.each do |path|
+        next if path.match(/_spec\.rb/)
+        require path
       end
     end
 
@@ -123,11 +117,11 @@ module Spork
         /^(.+?)([\?\!]{0,1})$/.match(method_name.to_s)
         ["#{$1}_without_spork#{$2}", "#{$1}_with_spork#{$2}"]
       end
-      
+
       def already_ran
         @already_ran ||= []
       end
-      
+
       def expanded_caller(caller_line)
         file, line = caller_line.split(/:(\d+)/)
         line.gsub(/:.+/, '')
@@ -137,13 +131,13 @@ module Spork
         end
         expanded
       end
-      
+
       def already_ran?(caller_script_and_line)
         return true if already_ran.include?(expanded_caller(caller_script_and_line))
         already_ran << expanded_caller(caller_script_and_line)
         false
       end
-      
+
       def each_run_procs
         @each_run_procs ||= []
       end
