@@ -20,6 +20,10 @@ Gem::Specification.new do |s|
   s.summary = %q{spork}
   s.test_files = Dir["features/**/*"] + Dir["spec/**/*"]
 
+  s.add_development_dependency 'rspec', '>= 2.13.0'
+  s.add_development_dependency 'cucumber', '~> 1.3.2'
+  s.add_development_dependency 'rake'
+
   case ENV['PLATFORM']
   when NilClass
   when "x86-mingw32", "x86-mswin32"
